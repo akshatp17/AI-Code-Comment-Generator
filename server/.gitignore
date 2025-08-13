@@ -1,0 +1,51 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.venv/
+ENV/
+env/
+*.env
+.env
+
+# VSCode and other IDEs
+.vscode/
+.idea/
+
+# Mac system files
+.DS_Store
+
+# SQLite database
+*.sqlite3
+*.db
+
+# Logs and debug
+*.log
+
+# Flask specific
+instance/
+*.pid
+
+# Pytest cache
+.pytest_cache/
+
+# Compiled shared objects
+*.so
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Coverage reports
+htmlcov/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Authlib OAuth state (if saved)
+authlib/
