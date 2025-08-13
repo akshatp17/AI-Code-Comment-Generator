@@ -1,33 +1,71 @@
 import React, { useState } from "react";
 import { Copy, Download, Code, Moon } from "lucide-react";
+import { generateComments } from "./services/comment-service";
 
 export default function App() {
   const [code, setCode] = useState("");
+  const [language, setLanguage] = useState("javascript");
+  const [commentedCode, setCommentedCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleGenerateComments = (e: React.FormEvent) => {
+  const handleGenerateComments = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Log the code and language to console
-    console.log("=== GENERATE COMMENTS CLICKED ===");
-    console.log("Code:", code);
-    console.log("=================================");
+    if (!code.trim()) {
+      return;
+    }
 
-    // You can add more functionality here later
+    setIsLoading(true);
+    try {
+      const response = await generateComments(code, language);
+      setCommentedCode(response.commented_code);
+    } catch (error) {
+      console.error("Error generating comments:", error);
+      setCommentedCode("Error generating comments. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleCopy = () => {
-    console.log("Copy button clicked");
-    // Copy functionality will be added later
+  const handleCopy = async () => {
+    if (commentedCode) {
+      try {
+        await navigator.clipboard.writeText(commentedCode);
+        // You could add a toast notification here
+      } catch (error) {
+        console.error("Failed to copy:", error);
+      }
+    }
   };
 
   const handleDownload = () => {
-    console.log("Download button clicked");
-    // Download functionality will be added later
+    if (commentedCode) {
+      const element = document.createElement("a");
+      const file = new Blob([commentedCode], { type: "text/plain" });
+      element.href = URL.createObjectURL(file);
+      element.download = `commented_code.${getFileExtension(language)}`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }
+  };
+
+  const getFileExtension = (lang: string): string => {
+    const extensions: { [key: string]: string } = {
+      c: "c",
+      cpp: "cpp",
+      python: "py",
+      java: "java",
+      javascript: "js",
+      golang: "go"
+    };
+    return extensions[lang] || "txt";
   };
 
   const handleNew = () => {
-    console.log("New button clicked");
-    // New functionality will be added later
+    setCode("");
+    setCommentedCode("");
+    setLanguage("javascript");
   };
 
   const handleThemeToggle = () => {
@@ -88,17 +126,30 @@ export default function App() {
                 className="w-full flex-1 p-4 rounded-md bg-[#071019] border border-slate-800 text-sm font-mono text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none cursor-text"
               />
 
-              <div className="flex gap-3 items-end">
+              <div className="flex flex-col w-full gap-3">
+                <div className="flex-1">
+                  <label className="text-xs text-slate-400 block mb-1">Language</label>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full rounded-md bg-[#071019] border border-slate-800 px-3 py-2 text-sm text-slate-200 cursor-pointer"
+                  >
+                    <option value="c">C</option>
+                    <option value="cpp">C++</option>
+                    <option value="python">Python</option>
+                    <option value="java">Java</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="golang">Go</option>
+                  </select>
+                </div>
+
                 <button
                   type="submit"
-                  className="w-full px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium cursor-pointer transition-colors duration-200"
+                  disabled={isLoading || !code.trim()}
+                  className="w-full px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium cursor-pointer transition-colors duration-200"
                 >
-                  Generate Comments
+                  {isLoading ? "Generating..." : "Generate Comments"}
                 </button>
-              </div>
-
-              <div className="text-sm text-slate-500 mt-2">
-                Tip: This UI is connected to your backend. Swap the handler to POST to your API.
               </div>
             </form>
           </section>
@@ -116,14 +167,16 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopy}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 cursor-pointer transition-colors duration-200"
+                  disabled={!commentedCode}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 disabled:bg-slate-800/20 disabled:cursor-not-allowed cursor-pointer transition-colors duration-200"
                 >
                   <Copy className="w-4 h-4" />
                   <span className="text-sm">Copy</span>
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 cursor-pointer transition-colors duration-200"
+                  disabled={!commentedCode}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 disabled:bg-slate-800/20 disabled:cursor-not-allowed cursor-pointer transition-colors duration-200"
                 >
                   <Download className="w-4 h-4" />
                   <span className="text-sm">Download</span>
@@ -132,21 +185,33 @@ export default function App() {
             </div>
 
             <div className="flex-1 overflow-auto border border-slate-800 rounded-lg p-4 bg-[#020409]">
-              <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 py-16">
-                <div className="p-4 rounded-full bg-slate-800/30 mb-3">
-                  <Code className="w-6 h-6 text-slate-300" />
+              {commentedCode ? (
+                <pre className="text-sm font-mono text-slate-200 whitespace-pre-wrap">
+                  {commentedCode}
+                </pre>
+              ) : isLoading ? (
+                <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 py-16">
+                  <div className="p-4 rounded-full bg-slate-800/30 mb-3">
+                    <Code className="w-6 h-6 text-slate-300 animate-spin" />
+                  </div>
+                  <p className="text-sm">Generating comments...</p>
+                  <p className="text-xs mt-2 text-slate-500">
+                    Please wait while we process your code.
+                  </p>
                 </div>
-                <p className="text-sm">Generated comments will appear here.</p>
-                <p className="text-xs mt-2 text-slate-500">
-                  Try pasting a couple of functions and press{" "}
-                  <strong>Generate Comments</strong>.
-                </p>
-              </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 py-16">
+                  <div className="p-4 rounded-full bg-slate-800/30 mb-3">
+                    <Code className="w-6 h-6 text-slate-300" />
+                  </div>
+                  <p className="text-sm">Generated comments will appear here.</p>
+                  <p className="text-xs mt-2 text-slate-500">
+                    Try pasting a couple of functions and press{" "}
+                    <strong>Generate Comments</strong>.
+                  </p>
+                </div>
+              )}
             </div>
-
-            <footer className="mt-3 text-xs text-slate-400">
-              Model note: use concise but thorough comments — consider exposing detail level in a future version.
-            </footer>
           </section>
         </main>
       </div>
