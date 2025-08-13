@@ -83,7 +83,7 @@ export default function App() {
               <Code className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold">AI Code Comment Generator</h1>
+              <h1 className="text-2xl font-semibold">Comment My Code!</h1>
               <p className="text-sm text-slate-400 mt-0.5">
                 Paste code → get clear, function-level comments.
               </p>
