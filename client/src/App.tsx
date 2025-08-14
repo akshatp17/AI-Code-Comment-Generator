@@ -7,6 +7,19 @@ export default function App() {
   const [language, setLanguage] = useState("javascript");
   const [commentedCode, setCommentedCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; isLeaving?: boolean } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type, isLeaving: false });
+
+    // Start slide-out animation after 2.7 seconds
+    setTimeout(() => {
+      setToast(prev => prev ? { ...prev, isLeaving: true } : null);
+    }, 2700);
+
+    // Remove toast after animation completes
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const handleGenerateComments = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,22 +44,30 @@ export default function App() {
     if (commentedCode) {
       try {
         await navigator.clipboard.writeText(commentedCode);
-        // You could add a toast notification here
+        showToast("Code copied to clipboard!");
       } catch (error) {
         console.error("Failed to copy:", error);
+        showToast("Failed to copy code", "error");
       }
     }
   };
 
   const handleDownload = () => {
     if (commentedCode) {
-      const element = document.createElement("a");
-      const file = new Blob([commentedCode], { type: "text/plain" });
-      element.href = URL.createObjectURL(file);
-      element.download = `commented_code.${getFileExtension(language)}`;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+      try {
+        const element = document.createElement("a");
+        const file = new Blob([commentedCode], { type: "text/plain" });
+        element.href = URL.createObjectURL(file);
+        element.download = `commented_code.${getFileExtension(language)}`;
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+        URL.revokeObjectURL(element.href);
+        showToast("Code downloaded successfully!");
+      } catch (error) {
+        console.error("Failed to download:", error);
+        showToast("Failed to download code", "error");
+      }
     }
   };
 
@@ -215,6 +236,29 @@ export default function App() {
           </section>
         </main>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 transform ${toast.type === 'success'
+            ? 'bg-green-600 text-white'
+            : 'bg-red-600 text-white'
+            } ${toast.isLeaving ? 'animate-slide-out' : 'animate-slide-in'}`}
+        >
+          <div className="flex items-center gap-2">
+            {toast.type === 'success' ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            )}
+            <span className="text-sm font-medium">{toast.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
