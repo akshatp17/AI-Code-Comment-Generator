@@ -112,13 +112,13 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
+            {/* <button
               onClick={handleThemeToggle}
               className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/60 cursor-pointer transition-colors duration-200"
             >
               <Moon className="w-4 h-4" />
               <span className="text-sm text-slate-300">Dark</span>
-            </button>
+            </button> */}
             <button
               onClick={handleNew}
               className="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shadow cursor-pointer transition-colors duration-200"
