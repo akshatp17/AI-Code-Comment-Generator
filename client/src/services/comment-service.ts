@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "https://ai-code-comment-generator.onrender.com";
 
 export const generateComments = async (code: string, language: string) => {
 	try {
